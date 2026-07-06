@@ -24,6 +24,16 @@ It can run `docker` and `docker compose` jobs against the host Docker daemon thr
 
 Docker must already be installed on the server. The installer only checks that `docker` and `docker compose` are available.
 
+Download the installer:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/necromant2005/self-hosted-runner-docker/main/install.sh -o install.sh
+chmod +x install.sh
+sudo ./install.sh
+```
+
+The downloaded installer expects the rest of this repository to be present in the same directory before it can build and start the runner.
+
 Run the installer:
 
 ```bash
