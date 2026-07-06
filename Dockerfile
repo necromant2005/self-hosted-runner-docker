@@ -2,6 +2,8 @@ FROM ubuntu:24.04
 
 ARG RUNNER_VERSION=2.325.0
 ARG TARGETARCH
+ARG RUNNER_UID=1000
+ARG RUNNER_GID=1000
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -19,7 +21,8 @@ RUN apt-get update && apt-get install -y \
     docker-compose-v2 \
     && rm -rf /var/lib/apt/lists/*
 
-RUN useradd -m -s /bin/bash runner \
+RUN groupadd -g "${RUNNER_GID}" runner \
+    && useradd -m -u "${RUNNER_UID}" -g "${RUNNER_GID}" -s /bin/bash runner \
     && usermod -aG sudo,docker runner \
     && echo "runner ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/runner \
     && chmod 0440 /etc/sudoers.d/runner

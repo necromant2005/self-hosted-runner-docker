@@ -11,6 +11,7 @@ It can run `docker` and `docker compose` jobs against the host Docker daemon thr
 ├── Dockerfile
 ├── docker-compose.yml
 ├── entrypoint.sh
+├── install.sh
 ├── .env.example
 └── README.md
 ```
@@ -21,26 +22,30 @@ It can run `docker` and `docker compose` jobs against the host Docker daemon thr
 - Docker Compose v2
 - A GitHub repository runner registration token
 
-Create the host directories used by the runner:
+Docker must already be installed on the server. The installer only checks that `docker` and `docker compose` are available.
+
+Run the installer:
 
 ```bash
-sudo mkdir -p /opt/github-runner/work /opt/deploy
-sudo chown -R 1000:1000 /opt/github-runner
+chmod +x install.sh
+sudo ./install.sh
 ```
 
 ## Configuration
 
-Copy the example environment file:
-
-```bash
-cp .env.example .env
-```
+On the first run, the installer creates `.env` from `.env.example`.
 
 Put the target repository URL and a fresh runner token from the GitHub UI into `.env`:
 
 ```bash
 REPO_URL=https://github.com/OWNER/REPOSITORY
 RUNNER_TOKEN=NEW_TOKEN_FROM_GITHUB_UI
+```
+
+Run the installer again:
+
+```bash
+sudo ./install.sh
 ```
 
 The real `.env` file is ignored by git.
@@ -55,7 +60,9 @@ RUNNER_WORKDIR: "/runner/_work"
 
 ## Start
 
-Build and start the runner:
+The installer builds and starts the runner when `.env` is configured.
+
+Manual start:
 
 ```bash
 docker compose build
@@ -81,6 +88,7 @@ The entrypoint removes the runner registration on container shutdown when GitHub
 ## Notes
 
 - The container mounts `/var/run/docker.sock`, so jobs can control Docker on the host.
+- The container `runner` user is created with UID/GID `1000:1000`; host work files are owned by the same IDs.
 - Use SSH to the host for host-level operations such as `systemctl`, `apt`, or `reboot`.
 - Runner work files are stored on the host in `/opt/github-runner/work`.
 - `/opt/deploy` is mounted into the container for deployment scripts or artifacts.
