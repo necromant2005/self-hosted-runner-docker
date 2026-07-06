@@ -24,38 +24,54 @@ It can run `docker` and `docker compose` jobs against the host Docker daemon thr
 
 Docker must already be installed on the server. The installer only checks that `docker` and `docker compose` are available.
 
-Download the installer:
+Create the installation directory and download the installer:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/necromant2005/self-hosted-runner-docker/main/install.sh -o install.sh
-chmod +x install.sh
-./install.sh
+sudo mkdir -p /opt/github-runner
+cd /opt/github-runner
+sudo curl -fsSL https://raw.githubusercontent.com/necromant2005/self-hosted-runner-docker/main/install.sh -o install.sh
+sudo chmod +x install.sh
+sudo ./install.sh
 ```
 
-The downloaded installer creates the rest of the required files in the same directory and prepares the host directories under `/opt`.
+The downloaded installer creates the rest of the required files in `/opt/github-runner`.
 
 Run the installer:
 
 ```bash
-chmod +x install.sh
-./install.sh
+cd /opt/github-runner
+sudo ./install.sh
 ```
 
 ## Configuration
 
-On the first run, the installer creates `.env` from `.env.example`.
+On the first run, the installer creates `/opt/github-runner/.env` from `.env.example`.
 
-Put the target repository URL and a fresh runner token from the GitHub UI into `.env`:
+Open it:
+
+```bash
+sudo nano /opt/github-runner/.env
+```
+
+Put the target repository URL and a fresh runner token from the GitHub UI into `.env`.
+
+Example:
 
 ```bash
 REPO_URL=https://github.com/OWNER/REPOSITORY
 RUNNER_TOKEN=NEW_TOKEN_FROM_GITHUB_UI
 ```
 
+Where to get the values:
+
+- `REPO_URL`: open your GitHub repository and copy the repository URL, for example `https://github.com/OWNER/REPOSITORY`.
+- `RUNNER_TOKEN`: open `Repo -> Settings -> Actions -> Runners -> New self-hosted runner`, select Linux, and copy the generated registration token from the GitHub command.
+
 Run the installer again:
 
 ```bash
-./install.sh
+cd /opt/github-runner
+sudo ./install.sh
 ```
 
 The real `.env` file is ignored by git.
@@ -100,5 +116,5 @@ The entrypoint removes the runner registration on container shutdown when GitHub
 - The container mounts `/var/run/docker.sock`, so jobs can control Docker on the host.
 - The container `runner` user is created with UID/GID `1000:1000`; host work files are owned by the same IDs.
 - Use SSH to the host for host-level operations such as `systemctl`, `apt`, or `reboot`.
-- Runner work files are stored on the host in `/opt/github-runner/work`.
+- Installation files and runner work files are stored on the host under `/opt/github-runner`.
 - `/opt/deploy` is mounted into the container for deployment scripts or artifacts.
