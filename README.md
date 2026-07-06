@@ -29,16 +29,16 @@ Download the installer:
 ```bash
 curl -fsSL https://raw.githubusercontent.com/necromant2005/self-hosted-runner-docker/main/install.sh -o install.sh
 chmod +x install.sh
-sudo ./install.sh
+./install.sh
 ```
 
-The downloaded installer expects the rest of this repository to be present in the same directory before it can build and start the runner.
+The downloaded installer creates the rest of the required files in the same directory and prepares the host directories under `/opt`.
 
 Run the installer:
 
 ```bash
 chmod +x install.sh
-sudo ./install.sh
+./install.sh
 ```
 
 ## Configuration
@@ -55,7 +55,7 @@ RUNNER_TOKEN=NEW_TOKEN_FROM_GITHUB_UI
 Run the installer again:
 
 ```bash
-sudo ./install.sh
+./install.sh
 ```
 
 The real `.env` file is ignored by git.

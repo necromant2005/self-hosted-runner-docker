@@ -4,11 +4,13 @@ set -euo pipefail
 APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ENV_FILE="${APP_DIR}/.env"
 ENV_EXAMPLE="${APP_DIR}/.env.example"
+RAW_BASE_URL="https://raw.githubusercontent.com/necromant2005/self-hosted-runner-docker/main"
 RUNNER_DIR="/opt/github-runner"
 RUNNER_WORK_DIR="${RUNNER_DIR}/work"
 DEPLOY_DIR="/opt/deploy"
 RUNNER_UID="1000"
 RUNNER_GID="1000"
+USE_SUDO_DOCKER=0
 
 log() {
   printf '%s\n' "$*"
@@ -38,8 +40,45 @@ run_root() {
 
 check_docker() {
   command -v docker >/dev/null 2>&1 || fail "docker is required"
-  docker compose version >/dev/null 2>&1 || fail "Docker Compose v2 is required"
+
+  if docker compose version >/dev/null 2>&1; then
+    USE_SUDO_DOCKER=0
+  elif command -v sudo >/dev/null 2>&1 && sudo docker compose version >/dev/null 2>&1; then
+    USE_SUDO_DOCKER=1
+  else
+    fail "Docker Compose v2 is required"
+  fi
+
   log "Docker and Docker Compose v2 are available."
+}
+
+docker_cmd() {
+  if [ "$USE_SUDO_DOCKER" -eq 1 ]; then
+    sudo docker "$@"
+  else
+    docker "$@"
+  fi
+}
+
+download_if_missing() {
+  local file="$1"
+  local target="${APP_DIR}/${file}"
+
+  if [ -f "$target" ]; then
+    return
+  fi
+
+  command -v curl >/dev/null 2>&1 || fail "curl is required to download ${file}"
+  log "Downloading ${file}..."
+  curl -fsSL "${RAW_BASE_URL}/${file}" -o "$target"
+}
+
+prepare_project_files() {
+  download_if_missing "Dockerfile"
+  download_if_missing "docker-compose.yml"
+  download_if_missing "entrypoint.sh"
+  download_if_missing ".env.example"
+  chmod +x "${APP_DIR}/entrypoint.sh"
 }
 
 prepare_directories() {
@@ -80,22 +119,19 @@ env_ready() {
 start_runner() {
   log "Building and starting the runner..."
   cd "$APP_DIR"
-  docker compose build
-  docker compose up -d
+  docker_cmd compose build
+  docker_cmd compose up -d
 }
 
 main() {
   local rerun_command
 
   check_docker
+  prepare_project_files
   prepare_directories
   prepare_env_file
 
-  if [ "$(id -u)" -eq 0 ]; then
-    rerun_command="./install.sh"
-  else
-    rerun_command="sudo ./install.sh"
-  fi
+  rerun_command="./install.sh"
 
   if ! env_ready; then
     cat <<EOF
