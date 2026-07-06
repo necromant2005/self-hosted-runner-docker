@@ -1,0 +1,18 @@
+services:
+  github-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: github-runner
+    restart: unless-stopped
+    environment:
+      REPO_URL: "${REPO_URL}"
+      RUNNER_TOKEN: "${RUNNER_TOKEN}"
+      RUNNER_NAME: "dnipro-docker-runner"
+      RUNNER_WORKDIR: "/runner/_work"
+    volumes:
+      - /opt/github-runner/work:/runner/_work
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /opt/deploy:/opt/deploy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
