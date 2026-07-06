@@ -52,6 +52,16 @@ check_docker() {
   log "Docker and Docker Compose v2 are available."
 }
 
+enable_docker_service() {
+  if ! command -v systemctl >/dev/null 2>&1; then
+    log "systemctl is not available; skipping Docker service enable."
+    return
+  fi
+
+  log "Enabling Docker service autostart..."
+  run_root systemctl enable docker
+}
+
 docker_cmd() {
   if [ "$USE_SUDO_DOCKER" -eq 1 ]; then
     sudo docker "$@"
@@ -124,14 +134,11 @@ start_runner() {
 }
 
 main() {
-  local rerun_command
-
   check_docker
+  enable_docker_service
   prepare_project_files
   prepare_directories
   prepare_env_file
-
-  rerun_command="./install.sh"
 
   if ! env_ready; then
     cat <<EOF
@@ -142,8 +149,10 @@ Edit ${ENV_FILE} and set:
   REPO_URL=https://github.com/OWNER/REPOSITORY
   RUNNER_TOKEN=<new token from GitHub UI>
 
-Then run this script again:
-  ${rerun_command}
+Then start the service:
+  cd ${APP_DIR}
+  sudo docker compose build
+  sudo docker compose up -d
 EOF
     exit 0
   fi

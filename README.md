@@ -22,9 +22,11 @@ It can run `docker` and `docker compose` jobs against the host Docker daemon thr
 - Docker Compose v2
 - A GitHub repository runner registration token
 
-Docker must already be installed on the server. The installer only checks that `docker` and `docker compose` are available.
+Docker must already be installed on the server. The installer checks that `docker` and `docker compose` are available and enables Docker autostart with `systemctl` when available.
 
-Create the installation directory and download the installer:
+## Installation
+
+1. Download all required files:
 
 ```bash
 sudo mkdir -p /opt/github-runner
@@ -36,18 +38,7 @@ sudo ./install.sh
 
 The downloaded installer creates the rest of the required files in `/opt/github-runner`.
 
-Run the installer:
-
-```bash
-cd /opt/github-runner
-sudo ./install.sh
-```
-
-## Configuration
-
-On the first run, the installer creates `/opt/github-runner/.env` from `.env.example`.
-
-Open it:
+2. Add repository URL and runner token to the config:
 
 ```bash
 sudo nano /opt/github-runner/.env
@@ -67,11 +58,12 @@ Where to get the values:
 - `REPO_URL`: open your GitHub repository and copy the repository URL, for example `https://github.com/OWNER/REPOSITORY`.
 - `RUNNER_TOKEN`: open `Repo -> Settings -> Actions -> Runners -> New self-hosted runner`, select Linux, and copy the generated registration token from the GitHub command.
 
-Run the installer again:
+3. Start the service:
 
 ```bash
 cd /opt/github-runner
-sudo ./install.sh
+sudo docker compose build
+sudo docker compose up -d
 ```
 
 The real `.env` file is ignored by git.
@@ -82,17 +74,6 @@ The runner settings live in `docker-compose.yml`:
 REPO_URL: "${REPO_URL}"
 RUNNER_NAME: "dnipro-docker-runner"
 RUNNER_WORKDIR: "/runner/_work"
-```
-
-## Start
-
-The installer builds and starts the runner when `.env` is configured.
-
-Manual start:
-
-```bash
-docker compose build
-docker compose up -d
 ```
 
 Watch logs:
